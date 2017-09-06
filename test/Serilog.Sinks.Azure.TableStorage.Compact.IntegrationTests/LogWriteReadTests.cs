@@ -24,7 +24,7 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.IntegrationTests
             m_logsTableReader = new LogsTableReader(table);
 
             m_logger = new LoggerConfiguration()
-                .WriteTo.AzureTableStorageWithCompactedRowFormat(CloudStorageAccount.DevelopmentStorageAccount, tableName)
+                .WriteTo.AzureTableStorageWithCompactedRowFormat(table)
                 .CreateLogger();
         }
 
@@ -33,7 +33,7 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.IntegrationTests
         {
             const int itemCount = 500;
             var from = DateTimeOffset.UtcNow;
-            
+
             WriteLogs(itemCount);
 
             var to = DateTimeOffset.UtcNow;

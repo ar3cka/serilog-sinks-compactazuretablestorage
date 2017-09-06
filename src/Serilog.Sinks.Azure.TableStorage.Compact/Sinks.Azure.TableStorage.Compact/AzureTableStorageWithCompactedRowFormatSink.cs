@@ -13,29 +13,23 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact
     {
         private readonly ILogEventSerializer m_eventSerializer = new ClefLogEventSerializer();
         private readonly ITableEntityConverter m_converter = new TableEntityConverter();
-
-        private readonly string m_tableName;
-        private readonly CloudStorageAccount m_cloudStorageAccount;
+        private readonly AsyncLazy<CloudTable> m_table;
 
         public AzureTableStorageWithCompactedRowFormatSink(
-            CloudStorageAccount cloudStorageAccount,
-            string tableName,
+            AsyncLazy<CloudTable> table,
             int batchSizeLimit,
             TimeSpan period) : base(batchSizeLimit, period)
         {
-            m_cloudStorageAccount = cloudStorageAccount ?? throw new ArgumentNullException(nameof(cloudStorageAccount));
-            m_tableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
+            m_table = table ?? throw new ArgumentNullException(nameof(table));
         }
 
         public AzureTableStorageWithCompactedRowFormatSink(
-            CloudStorageAccount cloudStorageAccount,
-            string tableName,
+            AsyncLazy<CloudTable> table,
             int batchSizeLimit,
             TimeSpan period,
             int queueLimit) : base(batchSizeLimit, period, queueLimit)
         {
-            m_cloudStorageAccount = cloudStorageAccount ?? throw new ArgumentNullException(nameof(cloudStorageAccount));
-            m_tableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
+            m_table = table ?? throw new ArgumentNullException(nameof(table));
         }
 
         protected override async Task EmitBatchAsync(IEnumerable<LogEvent> events)
@@ -51,7 +45,7 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact
                 {
                     var batch = new TableBatchOperation();
                     batch.Insert(m_converter.ConvertToDynamicEntity(firstEvent, lastEvent, memory));
-                    var table = await GetOrCreateStorageTable();
+                    var table = await m_table;
                     await table.ExecuteBatchAsync(batch);
                 }
             }
@@ -59,10 +53,7 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact
 
         private async Task<CloudTable> GetOrCreateStorageTable()
         {
-            var tableClient = m_cloudStorageAccount.CreateCloudTableClient();
-            var table = tableClient.GetTableReference(m_tableName);
-            await table.CreateIfNotExistsAsync();
-            return table;
+            return await m_table;
         }
     }
 }
