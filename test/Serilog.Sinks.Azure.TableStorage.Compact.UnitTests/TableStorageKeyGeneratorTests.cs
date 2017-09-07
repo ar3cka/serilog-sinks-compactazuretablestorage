@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Serilog.Events;
+using Serilog.Sinks.Azure.TableStorage.Compact.Persistence;
 using Xunit;
 
 namespace Serilog.Sinks.Azure.TableStorage.Compact.UnitTests

@@ -1,7 +1,7 @@
 using System;
 using Serilog.Events;
 
-namespace Serilog.Sinks.Azure.TableStorage.Compact
+namespace Serilog.Sinks.Azure.TableStorage.Compact.Persistence
 {
     public class DefaultTableStorageKeyGenerator : ITableStorageKeyGenerator
     {

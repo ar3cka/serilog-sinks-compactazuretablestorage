@@ -5,7 +5,7 @@ using System.IO;
 using Microsoft.WindowsAzure.Storage.Table;
 using Serilog.Events;
 
-namespace Serilog.Sinks.Azure.TableStorage.Compact
+namespace Serilog.Sinks.Azure.TableStorage.Compact.Persistence
 {
     public class TableEntityConverter : ITableEntityConverter
     {
@@ -76,7 +76,7 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact
                     var start = i * MAX_AZURE_TABLE_PROPERTY_SIZE_IN_KB;
                     Debug.Assert(data.Position == start);
 
-                    var length = Math.Min(MAX_AZURE_TABLE_PROPERTY_SIZE_IN_KB, data.Length - start);
+                    var length = Math.Min((long)MAX_AZURE_TABLE_PROPERTY_SIZE_IN_KB, data.Length - start);
                     var buffer = new byte[length];
                     data.Read(buffer, 0, (int)length);
 

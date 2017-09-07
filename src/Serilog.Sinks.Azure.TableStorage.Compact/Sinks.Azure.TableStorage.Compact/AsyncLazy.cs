@@ -12,7 +12,7 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact
         }
 
         public AsyncLazy(Func<Task<T>> valueFactory)
-            : base(() => Task.Factory.StartNew(() => valueFactory()).Unwrap())
+            : base(() => Task.Factory.StartNew(valueFactory).Unwrap())
         {
         }
 
