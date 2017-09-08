@@ -39,5 +39,13 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.UnitTests
                 rowKeyExpectedPosition++;
             }
         }
+
+        [Fact]
+        public void Test()
+        {
+            var now = DateTimeOffset.UtcNow;
+            var ms = DateTimeOffsetTools.ToUnixTimeMilliseconds(now);
+            Assert.Equal(now.ToUnixTimeMilliseconds(), ms);
+        }
     }
 }

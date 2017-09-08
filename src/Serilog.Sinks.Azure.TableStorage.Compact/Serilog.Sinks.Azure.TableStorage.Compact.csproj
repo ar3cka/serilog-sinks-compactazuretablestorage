@@ -4,11 +4,16 @@
     <AssemblyName>Serilog.Sinks.Azure.TableStorage.Compact</AssemblyName>
     <RootNamespace>Serilog</RootNamespace>
     <Version>0.0.1</Version>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="Serilog" Version="2.5.0" />

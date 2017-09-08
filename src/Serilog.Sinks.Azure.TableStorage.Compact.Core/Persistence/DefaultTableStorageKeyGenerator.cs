@@ -9,7 +9,7 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.Persistence
         {
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
 
-            var unixSeconds = logEvent.Timestamp.ToUnixTimeSeconds();
+            var unixSeconds = DateTimeOffsetTools.ToUnixTimeSeconds(logEvent.Timestamp);
             return unixSeconds.ToString("D19");
         }
 
@@ -17,7 +17,7 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.Persistence
         {
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
 
-            var now = logEvent.Timestamp.ToUnixTimeMilliseconds();
+            var now = DateTimeOffsetTools.ToUnixTimeMilliseconds(logEvent.Timestamp);
 
             return now.ToString("D19") + "|" + Guid.NewGuid().ToString("N");
         }
