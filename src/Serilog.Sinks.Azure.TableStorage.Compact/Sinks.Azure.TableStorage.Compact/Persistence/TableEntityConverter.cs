@@ -17,11 +17,11 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.Persistence
         private const int MAX_AZURE_TABLE_PROPERTY_SIZE_IN_KB = 64 * 1024;
 
         private const string PAYLOAD_SIZE_PROPERTY_NAME = "PayloadSize";
-
+        private const string VERSION = "Version";
         public DynamicTableEntity ConvertToDynamicEntity(SerializedClefLog log)
         {
             var properties = DistributeDataByProperties(log.Data);
-
+            properties[VERSION] = EntityProperty.GeneratePropertyForInt(1);
             return new DynamicTableEntity
             {
                 Properties = properties
