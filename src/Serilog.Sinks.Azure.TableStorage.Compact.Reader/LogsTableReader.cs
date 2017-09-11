@@ -38,13 +38,13 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.Reader
                 TableQuery.GenerateFilterCondition(
                     "PartitionKey",
                     QueryComparisons.GreaterThanOrEqual,
-                    fromDate.ToUnixTimeSeconds().ToString("D19"));
+                    DateTimeOffsetTools.ToUnixTimeSecondsString(fromDate));
 
             var toFilter =
                 TableQuery.GenerateFilterCondition(
                     "PartitionKey",
                     QueryComparisons.LessThanOrEqual,
-                    toDate.ToUnixTimeSeconds().ToString("D19"));
+                    DateTimeOffsetTools.ToUnixTimeMillisecondsString(toDate));
 
             return new TableQuery<DynamicTableEntity>().Where(
                 TableQuery.CombineFilters(fromFilter, TableOperators.And, toFilter));

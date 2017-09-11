@@ -4,7 +4,7 @@
     <AssemblyName>Serilog.Sinks.Azure.TableStorage.Compact.Reader</AssemblyName>
     <RootNamespace>Serilog.Sinks.Azure.TableStorage.Compact.Reader</RootNamespace>
     <Version>0.0.1</Version>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>CS1591</NoWarn>
@@ -17,5 +17,15 @@
     <PackageReference Include="WindowsAzure.Storage" Version="8.2.0" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.IO.Compression" />
+  </ItemGroup>
+  
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+  </ItemGroup>
+  
 </Project>
 
