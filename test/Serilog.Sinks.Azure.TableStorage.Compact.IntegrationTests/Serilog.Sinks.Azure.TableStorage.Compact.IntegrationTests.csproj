@@ -18,7 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Serilog.Sinks.Azure.TableStorage.Compact.Core\Serilog.Sinks.Azure.TableStorage.Compact.Core.csproj" />
     <ProjectReference Include="..\..\src\Serilog.Sinks.Azure.TableStorage.Compact.Reader\Serilog.Sinks.Azure.TableStorage.Compact.Reader.csproj" />
     <ProjectReference Include="..\..\src\Serilog.Sinks.Azure.TableStorage.Compact\Serilog.Sinks.Azure.TableStorage.Compact.csproj" />
   </ItemGroup>

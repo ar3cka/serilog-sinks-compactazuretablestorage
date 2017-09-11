@@ -1,11 +1,11 @@
-using Serilog.Events;
+using System;
 
 namespace Serilog.Sinks.Azure.TableStorage.Compact.Persistence
 {
     public interface ITableStorageKeyGenerator
     {
-        string GeneratePartitionKey(LogEvent logEvent);
+        string GeneratePartitionKey(DateTimeOffset time);
 
-        string GenerateRowKey(LogEvent logEvent);
+        string GenerateRowKey(DateTimeOffset time);
     }
 }

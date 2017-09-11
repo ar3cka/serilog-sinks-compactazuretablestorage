@@ -13,6 +13,7 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.IO.Compression" />
   </ItemGroup>
   
   <ItemGroup>
@@ -20,10 +21,6 @@
     <PackageReference Include="Serilog.Formatting.Compact" Version="1.0.0" />
     <PackageReference Include="Serilog.Sinks.PeriodicBatching" Version="2.1.1" />
     <PackageReference Include="WindowsAzure.Storage" Version="8.2.0" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <ProjectReference Include="..\Serilog.Sinks.Azure.TableStorage.Compact.Core\Serilog.Sinks.Azure.TableStorage.Compact.Core.csproj" />
   </ItemGroup>
 
 </Project>

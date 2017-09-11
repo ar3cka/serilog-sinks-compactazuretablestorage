@@ -2,15 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Table;
-using Serilog.Sinks.Azure.TableStorage.Compact.Persistence;
-using Serilog.Sinks.Azure.TableStorage.Compact.Serialization;
 
 namespace Serilog.Sinks.Azure.TableStorage.Compact.Reader
 {
     public class LogsTableReader
     {
-        private readonly ITableEntityConverter m_converter = new TableEntityConverter();
-        private readonly ILogEventSerializer m_serializer = new ClefLogEventSerializer();
+        private readonly TableEntityReader m_reader = new TableEntityReader();
         private readonly CloudTable m_cloudTable;
 
         public LogsTableReader(CloudTable cloudTable)
@@ -60,14 +57,11 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.Reader
             var dataSegment = await m_cloudTable.ExecuteQuerySegmentedAsync(query, token);
             foreach (var dynamicTableEntity in dataSegment.Results)
             {
-                using (var data = m_converter.ConvertFromDynamicEntity(dynamicTableEntity))
-                {
-                    var events = m_serializer.Deserialize(data);
+                var events = m_reader.ReadEvents(dynamicTableEntity);
 
-                    foreach (var logEvent in events)
-                    {
-                        result.Add(new PersistedLogEvent(dynamicTableEntity.PartitionKey, dynamicTableEntity.RowKey, logEvent));
-                    }
+                foreach (var logEvent in events)
+                {
+                    result.Add(new PersistedLogEvent(dynamicTableEntity.PartitionKey, dynamicTableEntity.RowKey, logEvent));
                 }
             }
 

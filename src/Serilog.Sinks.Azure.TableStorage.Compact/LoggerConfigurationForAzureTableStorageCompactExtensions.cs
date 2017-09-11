@@ -3,12 +3,19 @@ using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using Serilog.Configuration;
+using Serilog.Formatting;
+using Serilog.Formatting.Compact;
 using Serilog.Sinks.Azure.TableStorage.Compact;
+using Serilog.Sinks.Azure.TableStorage.Compact.Persistence;
+using Serilog.Sinks.Azure.TableStorage.Compact.SerializedLog;
 
 namespace Serilog
 {
     public static class LoggerConfigurationForAzureTableStorageCompactExtensions
     {
+        private static readonly ITextFormatter s_defaultTextFormatter = new CompactJsonFormatter();
+        private static readonly ISerializedClefLogFactory s_defaultLogFactory = new SerializedClefLogFactory(s_defaultTextFormatter);
+
         public static LoggerConfiguration AzureTableStorageWithCompactedRowFormat(
             this LoggerSinkConfiguration configuration,
             CloudStorageAccount cloudStorageAccount,
@@ -20,9 +27,10 @@ namespace Serilog
 
             return configuration.Sink(
                 new AzureTableStorageWithCompactedRowFormatSink(
-                    table: new AsyncLazy<CloudTable>(() => GetOrCreateTable(cloudStorageAccount, tableName)),
                     batchSizeLimit: 100,
-                    period: TimeSpan.FromSeconds(5)));
+                    period: TimeSpan.FromSeconds(5),
+                    logFactory: s_defaultLogFactory,
+                    logsTable: PrepareLogsTable(() => GetOrCreateTable(cloudStorageAccount, tableName))));
         }
 
         public static LoggerConfiguration AzureTableStorageWithCompactedRowFormat(
@@ -34,9 +42,18 @@ namespace Serilog
 
             return configuration.Sink(
                 new AzureTableStorageWithCompactedRowFormatSink(
-                    table: new AsyncLazy<CloudTable>(() => table),
                     batchSizeLimit: 100,
-                    period: TimeSpan.FromSeconds(5)));
+                    period: TimeSpan.FromSeconds(5),
+                    logFactory: s_defaultLogFactory,
+                    logsTable: PrepareLogsTable(() => Task.FromResult(table))));
+        }
+
+        private static LogsTable PrepareLogsTable(Func<Task<CloudTable>> prepareCloudTable)
+        {
+            return new LogsTable(
+                table: new AsyncLazy<CloudTable>(prepareCloudTable),
+                keyGenerator: new DefaultTableStorageKeyGenerator(),
+                tableEntityConverter: new TableEntityConverter());
         }
 
         private static async Task<CloudTable> GetOrCreateTable(CloudStorageAccount cloudStorageAccount, string tableName)
