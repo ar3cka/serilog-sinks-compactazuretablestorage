@@ -44,7 +44,7 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.Reader
                 TableQuery.GenerateFilterCondition(
                     "PartitionKey",
                     QueryComparisons.LessThanOrEqual,
-                    DateTimeOffsetTools.ToUnixTimeMillisecondsString(toDate));
+                    DateTimeOffsetTools.ToUnixTimeSecondsString(toDate));
 
             return new TableQuery<DynamicTableEntity>().Where(
                 TableQuery.CombineFilters(fromFilter, TableOperators.And, toFilter));
