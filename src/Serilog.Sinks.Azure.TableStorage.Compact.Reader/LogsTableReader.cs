@@ -15,6 +15,11 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.Reader
             m_cloudTable = cloudTable ?? throw new ArgumentNullException(nameof(cloudTable));
         }
 
+        public async Task<LogSegment> ReadLogsSegmented(DateTimeOffset fromDate, DateTimeOffset toDate, TableContinuationToken continuationToken)
+        {
+            return await FetchSegment(PrepareTableQuery(fromDate, toDate), continuationToken);
+        }
+
         public async Task<List<PersistedLogEvent>> ReadLogs(DateTimeOffset fromDate, DateTimeOffset toDate)
         {
             var query = PrepareTableQuery(fromDate, toDate);
@@ -23,9 +28,9 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.Reader
             TableContinuationToken continuationToken = null;
             do
             {
-                var (logEvents, token) = await FetchSegment(query, continuationToken);
-                result.AddRange(logEvents);
-                continuationToken = token;
+                var segment = await FetchSegment(query, continuationToken);
+                result.AddRange(segment.LogEvents);
+                continuationToken = segment.ContinuationToken;
             }
             while (continuationToken != null);
 
@@ -50,7 +55,7 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.Reader
                 TableQuery.CombineFilters(fromFilter, TableOperators.And, toFilter));
         }
 
-        private async Task<(List<PersistedLogEvent> logEvents, TableContinuationToken token)> FetchSegment(TableQuery<DynamicTableEntity> query, TableContinuationToken token)
+        private async Task<LogSegment> FetchSegment(TableQuery<DynamicTableEntity> query, TableContinuationToken token)
         {
             var result = new List<PersistedLogEvent>();
 
@@ -65,7 +70,7 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.Reader
                 }
             }
 
-            return (result, dataSegment.ContinuationToken);
+            return new LogSegment(result, dataSegment.ContinuationToken);
         }
     }
 }
