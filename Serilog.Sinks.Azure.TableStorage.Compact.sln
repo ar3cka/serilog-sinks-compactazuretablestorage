@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Sinks.Azure.TableSt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Sinks.Azure.TableStorage.Compact.Reader", "src\Serilog.Sinks.Azure.TableStorage.Compact.Reader\Serilog.Sinks.Azure.TableStorage.Compact.Reader.csproj", "{EE148955-84C5-4AE1-9B4F-6E17E6AA26EF}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Sinks.Azure.TableStorage.Compact.Core", "src\Serilog.Sinks.Azure.TableStorage.Compact.Core\Serilog.Sinks.Azure.TableStorage.Compact.Core.csproj", "{8A08364E-E29C-416F-9260-23E67DC30ACD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{EE148955-84C5-4AE1-9B4F-6E17E6AA26EF}.Release|x64.Build.0 = Release|Any CPU
 		{EE148955-84C5-4AE1-9B4F-6E17E6AA26EF}.Release|x86.ActiveCfg = Release|Any CPU
 		{EE148955-84C5-4AE1-9B4F-6E17E6AA26EF}.Release|x86.Build.0 = Release|Any CPU
+		{8A08364E-E29C-416F-9260-23E67DC30ACD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A08364E-E29C-416F-9260-23E67DC30ACD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A08364E-E29C-416F-9260-23E67DC30ACD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8A08364E-E29C-416F-9260-23E67DC30ACD}.Debug|x64.Build.0 = Debug|Any CPU
+		{8A08364E-E29C-416F-9260-23E67DC30ACD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8A08364E-E29C-416F-9260-23E67DC30ACD}.Debug|x86.Build.0 = Debug|Any CPU
+		{8A08364E-E29C-416F-9260-23E67DC30ACD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A08364E-E29C-416F-9260-23E67DC30ACD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A08364E-E29C-416F-9260-23E67DC30ACD}.Release|x64.ActiveCfg = Release|Any CPU
+		{8A08364E-E29C-416F-9260-23E67DC30ACD}.Release|x64.Build.0 = Release|Any CPU
+		{8A08364E-E29C-416F-9260-23E67DC30ACD}.Release|x86.ActiveCfg = Release|Any CPU
+		{8A08364E-E29C-416F-9260-23E67DC30ACD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

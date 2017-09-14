@@ -1,38 +1,80 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
+using Serilog.Sinks.Azure.TableStorage.Compact.Persistence;
 
 namespace Serilog.Sinks.Azure.TableStorage.Compact.Reader
 {
     public class LogsTableReader
     {
         private readonly TableEntityReader m_reader = new TableEntityReader();
-        private readonly CloudTable m_cloudTable;
+        private readonly ICloudTableFactory m_cloudTableFactory;
 
         public LogsTableReader(CloudTable cloudTable)
         {
-            m_cloudTable = cloudTable ?? throw new ArgumentNullException(nameof(cloudTable));
+            m_cloudTableFactory = new SingleInstanceCloudTableFactory(new AsyncLazy<CloudTable>(() => cloudTable));
         }
 
-        public async Task<LogSegment> ReadLogsSegmented(DateTimeOffset fromDate, DateTimeOffset toDate, TableContinuationToken continuationToken)
+        public LogsTableReader(CloudStorageAccount storageAccount, string tableName, bool tableRotationEnabled)
         {
-            return await FetchSegment(PrepareTableQuery(fromDate, toDate), continuationToken);
+            if (tableRotationEnabled)
+            {
+                m_cloudTableFactory = new RotatedCloudTableFactory(storageAccount, tableName);
+            }
+            else
+            {
+                m_cloudTableFactory = new SingleInstanceCloudTableFactory(new AsyncLazy<CloudTable>(() => storageAccount.CreateTable(tableName)));
+            }
         }
 
-        public async Task<List<PersistedLogEvent>> ReadLogs(DateTimeOffset fromDate, DateTimeOffset toDate)
+        public async Task<LogSegment> ReadLogsSegmented(DateTimeOffset fromTime, DateTimeOffset toTime, DateTimeOffset? logsDate, TableContinuationToken continuationToken)
         {
-            var query = PrepareTableQuery(fromDate, toDate);
+            var query = PrepareTableQuery(fromTime, toTime);
+
+            var fromDate = logsDate ?? fromTime.Date;
+            var table = await m_cloudTableFactory.Create(fromDate);
+            var segment = await FetchSegment(table, query, continuationToken);
+
+            if (segment.token != null)
+            {
+                return new LogSegment(segment.logEvents, true, fromDate, segment.token);
+            }
+
+            fromDate = fromDate.AddDays(1);
+            var toDate = toTime.Date;
+            if (fromDate <= toDate)
+            {
+                return new LogSegment(segment.logEvents, true, fromDate, null);
+            }
+
+            return new LogSegment(segment.logEvents, false, null, null);
+        }
+
+        public async Task<List<PersistedLogEvent>> ReadLogs(DateTimeOffset fromTime, DateTimeOffset toTime)
+        {
+            var query = PrepareTableQuery(fromTime, toTime);
             var result = new List<PersistedLogEvent>();
 
+            var fromDate = fromTime.Date;
+            var toDate = toTime.Date;
             TableContinuationToken continuationToken = null;
             do
             {
-                var segment = await FetchSegment(query, continuationToken);
-                result.AddRange(segment.LogEvents);
-                continuationToken = segment.ContinuationToken;
+                var table = await m_cloudTableFactory.Create(fromDate);
+
+                do
+                {
+                    var segment = await FetchSegment(table, query, continuationToken);
+                    result.AddRange(segment.logEvents);
+                    continuationToken = segment.token;
+                }
+                while (continuationToken != null);
+
+                fromDate = fromDate.AddDays(1);
             }
-            while (continuationToken != null);
+            while (fromDate <= toDate);
 
             return result;
         }
@@ -55,11 +97,11 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.Reader
                 TableQuery.CombineFilters(fromFilter, TableOperators.And, toFilter));
         }
 
-        private async Task<LogSegment> FetchSegment(TableQuery<DynamicTableEntity> query, TableContinuationToken token)
+        private async Task<(List<PersistedLogEvent> logEvents, TableContinuationToken token)> FetchSegment(CloudTable table, TableQuery<DynamicTableEntity> query, TableContinuationToken token)
         {
             var result = new List<PersistedLogEvent>();
 
-            var dataSegment = await m_cloudTable.ExecuteQuerySegmentedAsync(query, token);
+            var dataSegment = await table.ExecuteQuerySegmentedAsync(query, token);
             foreach (var dynamicTableEntity in dataSegment.Results)
             {
                 var events = m_reader.ReadEvents(dynamicTableEntity);
@@ -70,7 +112,7 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.Reader
                 }
             }
 
-            return new LogSegment(result, dataSegment.ContinuationToken);
+            return (result, dataSegment.ContinuationToken);
         }
     }
 }

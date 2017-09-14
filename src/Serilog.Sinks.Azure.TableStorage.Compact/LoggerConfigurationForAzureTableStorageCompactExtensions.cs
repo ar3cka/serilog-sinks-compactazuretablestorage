@@ -19,7 +19,8 @@ namespace Serilog
         public static LoggerConfiguration AzureTableStorageWithCompactedRowFormat(
             this LoggerSinkConfiguration configuration,
             CloudStorageAccount cloudStorageAccount,
-            string tableName)
+            string tableName,
+            bool enableTableRotation = true)
         {
             if (configuration == null) throw new ArgumentNullException(nameof(configuration));
             if (cloudStorageAccount == null) throw new ArgumentNullException(nameof(cloudStorageAccount));
@@ -30,7 +31,9 @@ namespace Serilog
                     batchSizeLimit: 100,
                     period: TimeSpan.FromSeconds(5),
                     logFactory: s_defaultLogFactory,
-                    logsTable: PrepareLogsTable(() => GetOrCreateTable(cloudStorageAccount, tableName))));
+                    logsTable: enableTableRotation
+                        ? PrepareRotatedLogsTable(cloudStorageAccount, tableName)
+                        : PrepareLogsTable(() => GetOrCreateTable(cloudStorageAccount, tableName))));
         }
 
         public static LoggerConfiguration AzureTableStorageWithCompactedRowFormat(
@@ -48,10 +51,18 @@ namespace Serilog
                     logsTable: PrepareLogsTable(() => Task.FromResult(table))));
         }
 
+        private static LogsTable PrepareRotatedLogsTable(CloudStorageAccount cloudStorageAccount, string tableName)
+        {
+            return new LogsTable(
+                tableFactory: new RotatedCloudTableFactory(cloudStorageAccount, tableName), 
+                keyGenerator: new DefaultTableStorageKeyGenerator(),
+                tableEntityConverter: new TableEntityConverter());
+        }
+
         private static LogsTable PrepareLogsTable(Func<Task<CloudTable>> prepareCloudTable)
         {
             return new LogsTable(
-                table: new AsyncLazy<CloudTable>(prepareCloudTable),
+                tableFactory: new SingleInstanceCloudTableFactory(new AsyncLazy<CloudTable>(prepareCloudTable)),
                 keyGenerator: new DefaultTableStorageKeyGenerator(),
                 tableEntityConverter: new TableEntityConverter());
         }

@@ -4,6 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Serilog.Core;
+using Serilog.Events;
+using Serilog.Parsing;
 using Serilog.Sinks.Azure.TableStorage.Compact.Reader;
 using Xunit;
 
@@ -17,14 +19,11 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.IntegrationTests
         public LogWriteReadTests()
         {
             var tableName = "LogTable" + Guid.NewGuid().ToString("N");
-            var tableClient = CloudStorageAccount.DevelopmentStorageAccount.CreateCloudTableClient();
-            var table = tableClient.GetTableReference(tableName);
-            table.CreateIfNotExistsAsync().Wait();
 
-            m_logsTableReader = new LogsTableReader(table);
+            m_logsTableReader = new LogsTableReader(CloudStorageAccount.DevelopmentStorageAccount, tableName, true);
 
             m_logger = new LoggerConfiguration()
-                .WriteTo.AzureTableStorageWithCompactedRowFormat(table)
+                .WriteTo.AzureTableStorageWithCompactedRowFormat(CloudStorageAccount.DevelopmentStorageAccount, tableName)
                 .CreateLogger();
         }
 
@@ -34,8 +33,8 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.IntegrationTests
             const int itemCount = 500;
             var from = DateTimeOffset.UtcNow;
 
-            WriteLogs(itemCount);
-
+            WriteLogs(itemCount, DateTimeOffset.UtcNow);
+            m_logger.Dispose();
             var to = DateTimeOffset.UtcNow;
 
             var logs = await m_logsTableReader.ReadLogs(from, to);
@@ -49,15 +48,41 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.IntegrationTests
             }
         }
 
-        private void WriteLogs(int itemCount)
+        [Fact]
+        public async Task WrittenLogs_OnRotatedLogs_PreserveOrderOnRead()
         {
+            const int itemCount = 100;
+            var from = DateTimeOffset.UtcNow.AddDays(-5);
+
+            WriteLogs(itemCount, from);
+            WriteLogs(itemCount, from.AddDays(1));
+            WriteLogs(itemCount, from.AddDays(2));
+            WriteLogs(itemCount, from.AddDays(3));
+            WriteLogs(itemCount, from.AddDays(4));
+            m_logger.Dispose();
+
+            var to = from.AddDays(5);
+
+            var logs = await m_logsTableReader.ReadLogs(from, to);
+            Assert.Equal(itemCount * 5, logs.Count);
+        }
+
+        private void WriteLogs(int itemCount, DateTimeOffset date)
+        {
+
             foreach (var item in Enumerable.Range(0, itemCount))
             {
-                m_logger.Information("test {ItemNumber}", item);
+                var now = DateTimeOffset.UtcNow;
+
+                m_logger.Write(new LogEvent(
+                    new DateTimeOffset(date.Year, date.Month, date.Day, now.Hour, now.Minute, now.Second, now.Millisecond, now.Offset),
+                    LogEventLevel.Information,
+                    null,
+                    new MessageTemplate("test {ItemNumber}", new[] { new PropertyToken("ItemNumber", "{ItemNumber}") }),
+                    new[] { new LogEventProperty("ItemNumber", new ScalarValue(item)) }));
+
                 Thread.Sleep(TimeSpan.FromMilliseconds(15));
             }
-
-            m_logger.Dispose();
         }
     }
 }
