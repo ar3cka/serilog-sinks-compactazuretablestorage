@@ -90,7 +90,7 @@ namespace Serilog.Sinks.Azure.TableStorage.Compact.Reader
             var toFilter =
                 TableQuery.GenerateFilterCondition(
                     "PartitionKey",
-                    QueryComparisons.LessThanOrEqual,
+                    QueryComparisons.LessThan,
                     DateTimeOffsetTools.ToUnixTimeSecondsString(toDate));
 
             return new TableQuery<DynamicTableEntity>().Where(
